@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaperTrail for Jyoti Patankar</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel (to interpret JSX in browser) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- ICONS (Inline SVGs) ---
+        const Newspaper = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+        );
+        const Globe = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"/></svg>
+        );
+        const ExternalLink = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
+        );
+        const MapPin = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        );
+        const Filter = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        );
+        const BookOpen = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        );
+        const Search = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+        );
+        const ChevronRight = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6"/></svg>
+        );
+
+        // --- DATA SOURCE ---
+        const NEWSPAPERS = [
+        // --- MARATHI (MAHARASHTRA/AMRAVATI) ---
+        {
+            id: 'lokmat',
+            name: 'Lokmat',
+            language: 'Marathi',
+            url: 'https://www.lokmat.com',
+            ePaperUrl: 'https://epaper.lokmat.com',
+            districts: ['Amravati', 'Nagpur', 'Pune', 'Mumbai', 'Aurangabad', 'Nashik', 'Akola', 'Jalgaon']
+        },
+        {
+            id: 'sakal',
+            name: 'Sakal',
+            language: 'Marathi',
+            url: 'https://www.esakal.com',
+            ePaperUrl: 'https://epaper.esakal.com', 
+            districts: ['Amravati', 'Pune', 'Mumbai', 'Nagpur', 'Kolhapur', 'Nashik', 'Satara']
+        },
+        {
+            id: 'deshonnati',
+            name: 'Deshonnati',
+            language: 'Marathi',
+            url: 'https://www.deshonnati.com',
+            ePaperUrl: 'https://epaper.deshonnati.com',
+            districts: ['Amravati', 'Akola', 'Buldhana', 'Washim', 'Yavatmal']
+        },
+        {
+            id: 'loksatta',
+            name: 'Loksatta',
+            language: 'Marathi',
+            url: 'https://www.loksatta.com',
+            ePaperUrl: 'https://epaper.loksatta.com',
+            districts: ['Amravati', 'Mumbai', 'Pune', 'Nagpur', 'Ahmednagar']
+        },
+        {
+            id: 'amravatimandal',
+            name: 'Amravati Mandal',
+            language: 'Marathi',
+            url: 'http://amravatimandal.com',
+            ePaperUrl: 'http://amravatimandal.com',
+            districts: ['Amravati']
+        },
+        {
+            id: 'vidarbhamatadar',
+            name: 'Vidarbha Matadar',
+            language: 'Marathi',
+            url: 'https://www.vidarbhamatadar.com', 
+            ePaperUrl: 'https://www.vidarbhamatadar.com',
+            districts: ['Amravati', 'Vidarbha']
+        },
+        
+        // --- HINDI (INDIA/AMRAVATI) ---
+        {
+            id: 'dainikbhaskar',
+            name: 'Dainik Bhaskar',
+            language: 'Hindi',
+            url: 'https://www.bhaskar.com',
+            ePaperUrl: 'https://epaper.bhaskar.com',
+            districts: ['Amravati', 'Nagpur', 'Bhopal', 'Indore', 'Jaipur']
+        },
+        {
+            id: 'navbharat',
+            name: 'Navbharat',
+            language: 'Hindi',
+            url: 'https://www.enavabharat.com',
+            ePaperUrl: 'https://epaper.enavabharat.com',
+            districts: ['Amravati', 'Nagpur', 'Mumbai', 'Pune', 'Nashik']
+        },
+        {
+            id: 'lokmatsamachar',
+            name: 'Lokmat Samachar',
+            language: 'Hindi',
+            url: 'https://www.lokmatnews.in',
+            ePaperUrl: 'https://epaper.lokmat.com/lokmat-samachar', 
+            districts: ['Amravati', 'Nagpur', 'Aurangabad', 'Akola']
+        },
+        {
+            id: 'hindusthan',
+            name: 'Hindustan',
+            language: 'Hindi',
+            url: 'https://www.livehindustan.com',
+            ePaperUrl: 'https://epaper.livehindustan.com',
+            districts: ['Amravati', 'Patna', 'Lucknow', 'Delhi', 'Varanasi']
+        },
+        {
+            id: 'dainikjagran',
+            name: 'Dainik Jagran',
+            language: 'Hindi',
+            url: 'https://www.jagran.com',
+            ePaperUrl: 'https://epaper.jagran.com',
+            districts: ['Delhi', 'Lucknow', 'Patna']
+        },
+        {
+            id: 'amarujala',
+            name: 'Amar Ujala',
+            language: 'Hindi',
+            url: 'https://www.amarujala.com',
+            ePaperUrl: 'https://epaper.amarujala.com',
+            districts: ['Delhi', 'Lucknow', 'Dehradun']
+        },
+
+        // --- LOCAL / SMALLER PUBLICATIONS (AMRAVATI) ---
+        {
+            id: 'dainiklokpath',
+            name: 'Dainik Lokpath',
+            language: 'Marathi',
+            url: 'https://dailyloakpath.com',
+            ePaperUrl: 'https://dailyloakpath.com',
+            districts: ['Amravati']
+        },
+        {
+            id: 'yuvaratna',
+            name: 'Daily Yuvaratna News',
+            language: 'Marathi',
+            url: 'http://epaper.yuvaratnanews.com',
+            ePaperUrl: 'http://epaper.yuvaratnanews.com',
+            districts: ['Amravati']
+        },
+        {
+            id: 'pratidin',
+            name: 'Pratidin Akhabar',
+            language: 'Marathi',
+            url: 'https://www.google.com/search?q=Pratidin+Akhabar+Amravati+News', 
+            ePaperUrl: 'https://www.google.com/search?q=Pratidin+Akhabar+Amravati+epaper',
+            districts: ['Amravati'],
+            isSearchLink: true
+        },
+
+        // --- ENGLISH (INDIA) ---
+        {
+            id: 'thehindu',
+            name: 'The Hindu',
+            language: 'English',
+            url: 'https://www.thehindu.com',
+            ePaperUrl: 'https://epaper.thehindu.com',
+            districts: ['Chennai', 'Delhi', 'Bangalore', 'Hyderabad', 'Mumbai']
+        },
+        {
+            id: 'indianexpress',
+            name: 'The Indian Express',
+            language: 'English',
+            url: 'https://indianexpress.com',
+            ePaperUrl: 'https://epaper.indianexpress.com',
+            districts: ['Mumbai', 'Delhi', 'Pune']
+        },
+        {
+            id: 'toi',
+            name: 'Times of India',
+            language: 'English',
+            url: 'https://timesofindia.indiatimes.com',
+            ePaperUrl: 'https://epaper.timesgroup.com',
+            districts: ['Mumbai', 'Delhi', 'Nagpur', 'Pune', 'Amravati']
+        },
+
+        // --- ENGLISH (GLOBAL) ---
+        {
+            id: 'nyt',
+            name: 'The New York Times',
+            language: 'English',
+            url: 'https://www.nytimes.com',
+            ePaperUrl: 'https://www.nytimes.com/section/todayspaper',
+            districts: []
+        },
+        {
+            id: 'guardian',
+            name: 'The Guardian',
+            language: 'English',
+            url: 'https://www.theguardian.com',
+            ePaperUrl: 'https://www.theguardian.com/weekly',
+            districts: []
+        },
+        {
+            id: 'bbc',
+            name: 'BBC News',
+            language: 'English',
+            url: 'https://www.bbc.com/news',
+            ePaperUrl: 'https://www.bbc.com/news',
+            districts: []
+        }
+        ];
+
+        const LANGUAGES = [...new Set(NEWSPAPERS.map(n => n.language))];
+        const DISTRICTS = [...new Set(NEWSPAPERS.flatMap(n => n.districts || []))].sort();
+
+        function App() {
+            const [selectedLanguage, setSelectedLanguage] = useState('All');
+            const [selectedDistrict, setSelectedDistrict] = useState('All');
+
+            const filteredPapers = NEWSPAPERS.filter(paper => {
+                const matchLang = selectedLanguage === 'All' || paper.language === selectedLanguage;
+                // Fixed the syntax error here
+                const matchDistrict = selectedDistrict === 'All' || (paper.districts && paper.districts.includes(selectedDistrict));
+                return matchLang && matchDistrict;
+            });
+
+            return (
+                <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
+                    {/* HEADER */}
+                    <header className="bg-blue-900 text-white shadow-lg sticky top-0 z-50">
+                        <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-2">
+                                <Newspaper className="h-8 w-8 text-blue-300" />
+                                <h1 className="text-2xl font-bold tracking-tight">PaperTrail-Kiosk</h1>
+                            </div>
+                            <div className="flex items-center gap-3 bg-blue-800 px-4 py-1.5 rounded-full border border-blue-700">
+                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                <p className="text-blue-100 text-sm font-medium">
+                                    Today's Editions Live
+                                </p>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="max-w-6xl mx-auto px-4 py-8">
+                        {/* CONTROLS */}
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* DISTRICT SELECT */}
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                                        Select Your District
+                                    </label>
+                                    <div className="relative">
+                                        <select 
+                                            className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer text-lg font-medium text-slate-700"
+                                            value={selectedDistrict}
+                                            onChange={(e) => setSelectedDistrict(e.target.value)}
+                                        >
+                                            <option value="All">All Districts</option>
+                                            {DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                                        </select>
+                                        <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-blue-500 pointer-events-none" />
+                                        <ChevronRight className="absolute right-3 top-3.5 h-5 w-5 text-slate-400 pointer-events-none rotate-90" />
+                                    </div>
+                                </div>
+
+                                {/* LANGUAGE SELECT */}
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                                        Select Language
+                                    </label>
+                                    <div className="relative">
+                                        <select 
+                                            className="w-full pl-9 pr-8 py-3 bg-slate-50 border border-slate-200 rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer text-lg font-medium text-slate-700"
+                                            value={selectedLanguage}
+                                            onChange={(e) => setSelectedLanguage(e.target.value)}
+                                        >
+                                            <option value="All">All Languages</option>
+                                            {LANGUAGES.map(lang => <option key={lang} value={lang}>{lang}</option>)}
+                                        </select>
+                                        <Filter className="absolute left-3 top-3.5 h-5 w-5 text-blue-500 pointer-events-none" />
+                                        <ChevronRight className="absolute right-3 top-3.5 h-5 w-5 text-slate-400 pointer-events-none rotate-90" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* RESULTS GRID */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filteredPapers.map((paper) => (
+                                <div 
+                                    key={paper.id} 
+                                    className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden group"
+                                >
+                                    <div className="p-6 flex-1">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div>
+                                                <h3 className="text-xl font-bold text-slate-900 leading-tight mb-1 group-hover:text-blue-700 transition-colors">
+                                                    {paper.name}
+                                                </h3>
+                                                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-2">
+                                                    <span className="bg-slate-100 px-2 py-1 rounded-md font-medium text-slate-600 border border-slate-200">
+                                                        {paper.language}
+                                                    </span>
+                                                    {paper.districts && paper.districts.includes(selectedDistrict) && selectedDistrict !== 'All' && (
+                                                        <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-medium border border-blue-100 flex items-center gap-1">
+                                                            <MapPin className="h-3 w-3" />
+                                                            {selectedDistrict} Edition
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="bg-blue-50 p-2.5 rounded-xl group-hover:bg-blue-100 transition-colors">
+                                                {paper.isSearchLink ? (
+                                                    <Search className="h-6 w-6 text-blue-600" />
+                                                ) : (
+                                                    <Newspaper className="h-6 w-6 text-blue-600" />
+                                                )}
+                                            </div>
+                                        </div>
+                                        
+                                        <p className="text-sm text-slate-600 mb-4 line-clamp-2">
+                                            {paper.isSearchLink 
+                                                ? "No direct link available. Click to find the latest edition via search."
+                                                : "Direct access to today's news."}
+                                            {!paper.isSearchLink && (paper.districts && paper.districts.length > 0 ? ` Covers ${paper.districts.slice(0, 3).join(', ')}...` : ' International Coverage')}
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-slate-50 p-4 border-t border-slate-100 grid grid-cols-2 gap-3">
+                                        <a 
+                                            href={paper.url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
+                                        >
+                                            <Globe className="h-4 w-4" />
+                                            Website
+                                        </a>
+
+                                        <a
+                                            href={paper.ePaperUrl || paper.url}
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className={`flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-bold text-white rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95
+                                                ${paper.isSearchLink ? 'bg-indigo-500 hover:bg-indigo-600' : 'bg-blue-600 hover:bg-blue-700'}`}
+                                        >
+                                            <BookOpen className="h-4 w-4" />
+                                            {paper.isSearchLink ? 'Find ePaper' : 'Read ePaper'}
+                                        </a>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* EMPTY STATE */}
+                        {filteredPapers.length === 0 && (
+                            <div className="text-center py-16 bg-white rounded-xl border border-slate-100 shadow-sm">
+                                <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Newspaper className="h-10 w-10 text-slate-300" />
+                                </div>
+                                <h3 className="text-slate-900 font-bold text-xl">No newspapers found</h3>
+                                <p className="text-slate-500 mt-2 max-w-md mx-auto">
+                                    We couldn't find any papers matching those filters. Try selecting "All Districts" to see more options.
+                                </p>
+                                <button 
+                                    onClick={() => {
+                                        setSelectedDistrict('All');
+                                        setSelectedLanguage('All');
+                                    }}
+                                    className="mt-6 px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                                >
+                                    Clear Filters
+                                </button>
+                            </div>
+                        )}
+                    </main>
+
+                    <footer className="bg-slate-900 text-slate-400 py-8 mt-12">
+                        <div className="max-w-6xl mx-auto px-4 text-center">
+                            <p className="text-sm">
+                                © {new Date().getFullYear()} PaperTrail. Direct links to official ePaper sources.
+                            </p>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
